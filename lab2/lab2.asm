@@ -7,7 +7,7 @@ EOF EQU '$'
 
 _seg_inaccess 		db 'Inaccessible memory:     ', 0DH,0AH,EOF
 _seg_env		db 'Enviroment adress:     ', 0DH,0AH,EOF
-_tail			db 'Command line tail:', 0DH,0AH,EOF
+_tail			db 'Command line tail: ',EOF
 _endl			db  0DH,0AH,EOF
 _env			db 'Enviroment: ', 0DH,0AH,EOF
 _path			db 'Path: ', 0DH,0AH,EOF
@@ -81,26 +81,22 @@ SEGMENT_ENVIROMENT PROC NEAR
 SEGMENT_ENVIROMENT ENDP
 
 TAIL PROC NEAR
+	mov dx, offset _tail
+	call PRINT
 	xor cx, cx
 	mov cl, ds:[80h]
-	mov si, offset _tail
-	add si, 18
    	cmp cl, 0h
-   	je _is_empty
+   	je _end_tail 
 	xor di, di
-	xor ax, ax
+	mov ah, 02h
 tail_loop: 
-	mov al, ds:[81h+di]
+	mov dl, ds:[81h+di]
    	inc di
-   	mov [si], al
-	inc si
+	int 21h
 	loop tail_loop
-	mov dx, offset _tail
-	jmp _end_tail
-_is_empty:
+_end_tail:
 	mov dx, offset _empty
-_end_tail: 
-   	call PRINT
+	call PRINT
    	ret
 TAIL ENDP
 
@@ -160,8 +156,6 @@ BEGIN:
 	call TAIL
 	call CONTENT
 	xor al,al
-	mov AH, 01h
-   	int 21h
 	mov AH,4Ch
 	int 21h
 TESTPC ENDS
